@@ -11,7 +11,25 @@
     <description>处理EXCEL文件数据的工具</description>
 
     <dependencies>
+
         <!-- 引入Apache的excel处理jar包 -->
+        <!-- 这个针对xls文件的 -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+        <!-- 这个是针对07后面新的xlsx文件-->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml-schemas</artifactId>
+            <version>4.1.0</version>
+        </dependency>
 
     </dependencies>
 
@@ -35,7 +53,7 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-            <!-- 指定jdk，防止update project -->
+            <!-- 指定JDK和项目编码，防止update project -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
