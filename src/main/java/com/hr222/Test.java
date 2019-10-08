@@ -1,7 +1,6 @@
 package com.hr222;
 
 import com.hr222.annutations.CellName;
-import com.hr222.annutations.RowLength;
 
 import java.util.Date;
 
@@ -10,7 +9,6 @@ import java.util.Date;
  * @create: 2019-10-07 22:39
  * @description: 测试
  **/
-@RowLength(3)
 public class Test {
 
     private Integer id;
