@@ -5,8 +5,10 @@ import com.hr222.exception.FileTypeException;
 import com.hr222.exception.LengthException;
 import com.hr222.exception.SheetException;
 import com.hr222.util.AnnutationsUtil;
+import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.IOException;
@@ -167,7 +169,8 @@ public class ExcelInputHandler {
 
     /**
      * 通过指定工作表的名称给用户使用的获取excel数据.并返回List<Map<String,Object>>集合对象
-     * 注:推荐使用readExcelData.该方法获取的是原始的excel数据
+     * 注1:推荐使用readExcelData.该方法获取的是原始的excel数据
+     * 注2:若是单元格存在空单元格和空皆,则返回的是""/null
      *
      * @param excelFileInputStream excel文件集合
      * @param excelType            0:代表XLS(07年前的EXCEL文件格式) 1:代表XLSX(07后的EXCEL文件格式)
@@ -187,22 +190,52 @@ public class ExcelInputHandler {
         for (int rowIndex = 1; rowIndex < sheet.getLastRowNum(); rowIndex++) {
             Map<String, Object> value = new HashMap<>(rowField.size());
             Row row = sheet.getRow(rowIndex);
-            for (int cellIndex = 0;cellIndex < row.getLastCellNum();cellIndex++){
+            for (int cellIndex = 0; cellIndex < row.getLastCellNum(); cellIndex++) {
                 Cell cell = row.getCell(cellIndex);
                 String k = rowField.get(cellIndex);
                 Object v;
-                switch (cell.getCellType()){
+                switch (cell.getCellType()) {
                     //数字类型
                     case NUMERIC:
                         v = cell.getNumericCellValue();
-                        value.put(k,v);
+                        value.put(k, v);
                         break;
+                    //字符串
                     case STRING:
                         v = cell.getStringCellValue();
-                        value.put(k,v);
-
+                        value.put(k, v);
+                        break;
+                    //公式
+                    case FORMULA:
+                        //公式对象比较特殊这里需要注意这里我们需要获取计算后的公式值就好了不需要有多余设置公式值.
+                        if (wb instanceof HSSFWorkbook) {
+                            HSSFCell hssfCell = (HSSFCell) cell;
+                            v = hssfCell.getCellFormula();
+                        } else {
+                            XSSFCell xssfCell = (XSSFCell) cell;
+                            v = cell.getCellFormula();
+                        }
+                        value.put(k, v);
+                        break;
+                    //布莱恩
+                    case BOOLEAN:
+                        v = cell.getBooleanCellValue();
+                        value.put(k, v);
+                        break;
+                    //空
+                    case BLANK:
+                        v = "";
+                        value.put(k, v);
+                        break;
+                    //异常属性
+                    case _NONE:
+                    case ERROR:
+                        v = null;
+                        value.put(k, v);
+                        break;
                 }
             }
+            data.add(value);
         }
         return data;
     }
