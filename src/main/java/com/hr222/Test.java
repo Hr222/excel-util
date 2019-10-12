@@ -1,6 +1,7 @@
 package com.hr222;
 
 import com.hr222.annutations.CellName;
+import com.hr222.annutations.IsBoolean;
 
 import java.util.Date;
 
@@ -21,6 +22,10 @@ public class Test {
 
     @CellName("次数")
     private Integer time;
+
+    @CellName("性别")
+    @IsBoolean("男")
+    private Boolean sex;
 
     public Integer getId() {
         return id;

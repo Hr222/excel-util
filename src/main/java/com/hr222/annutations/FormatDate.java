@@ -5,7 +5,7 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
-public @interface IsDate {
+public @interface FormatDate {
 
     String format() default "yyyy-MM-dd HH:mm:ss";
 
