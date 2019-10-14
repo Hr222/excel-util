@@ -18,6 +18,5 @@ public @interface CellName {
      * @return
      */
     boolean allowNull() default true;
-
-
+    
 }

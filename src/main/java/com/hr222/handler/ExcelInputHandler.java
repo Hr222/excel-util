@@ -4,6 +4,7 @@ import com.hr222.exception.FileStandardException;
 import com.hr222.exception.FileTypeException;
 import com.hr222.exception.LengthException;
 import com.hr222.exception.SheetException;
+import com.hr222.usermodel.ExcelModel;
 import com.hr222.util.AnnutationsUtil;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -51,9 +52,9 @@ public class ExcelInputHandler {
      */
     ExcelInputHandler(Class targetClass) {
         target = targetClass;
-        Map<String, Object> data = AnnutationsUtil.getExcel(targetClass);
-        List<String> cellNames = (List<String>) data.get("cellNames");
-        List<String> cellFields = (List<String>) data.get("cellFields");
+        ExcelModel data = AnnutationsUtil.getExcelClassField(targetClass);
+        List<String> cellNames = data.getCellNames();
+        List<String> cellFields = data.getCellFields();
         excel = new Excel(cellNames.size(), cellNames, cellFields);
     }
 
