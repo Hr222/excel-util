@@ -1,11 +1,9 @@
 package com.hr222.handler;
 
-import com.hr222.exception.FileStandardException;
-import com.hr222.exception.FileTypeException;
-import com.hr222.exception.LengthException;
-import com.hr222.exception.SheetException;
+import com.hr222.enumeration.SupportEnum;
+import com.hr222.exception.*;
 import com.hr222.usermodel.ExcelModel;
-import com.hr222.util.AnnutationsUtil;
+import com.hr222.util.AnnotationsUtil;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
@@ -23,7 +21,7 @@ import java.util.*;
  **/
 public class ExcelInputHandler {
 
-    private Excel excel;
+    private ExcelModel excelModel = new ExcelModel();
 
     private Class target;
 
@@ -42,7 +40,8 @@ public class ExcelInputHandler {
         if (cellNames.size() != cellField.size()) {
             throw new LengthException();
         }
-        excel = new Excel(cellNames.size(), cellNames, cellField);
+        excelModel.setCellNames(cellNames);
+        excelModel.setCellFields(cellField);
     }
 
     /**
@@ -51,11 +50,25 @@ public class ExcelInputHandler {
      * @param targetClass 目标对象类
      */
     ExcelInputHandler(Class targetClass) {
-        target = targetClass;
-        ExcelModel data = AnnutationsUtil.getExcelClassField(targetClass);
-        List<String> cellNames = data.getCellNames();
-        List<String> cellFields = data.getCellFields();
-        excel = new Excel(cellNames.size(), cellNames, cellFields);
+        setTarget(targetClass);
+    }
+
+    /**
+     * 初始化工作簿
+     *
+     * @param excelFileInputStream excel文件流
+     * @param excelType            0:代表XLS(07年前的EXCEL文件格式) 1:代表XLSX(07后的EXCEL文件格式)
+     * @return 初始工作簿
+     * @throws IOException
+     */
+    private Workbook initWorkBook(InputStream excelFileInputStream, int excelType) throws IOException {
+        Workbook wb = null;
+        if (excelType == 0) {
+            wb = new HSSFWorkbook(excelFileInputStream);
+        } else if (excelType == 1) {
+            wb = new XSSFWorkbook(excelFileInputStream);
+        }
+        return wb;
     }
 
     /**
@@ -72,12 +85,7 @@ public class ExcelInputHandler {
      */
     public boolean judgeExcelHeaderStandard(InputStream excelFileInputStream, int excelType, boolean isReadAllSheet) throws
             IOException, FileTypeException, SheetException {
-        Workbook wb = null;
-        if (excelType == 0) {
-            wb = new HSSFWorkbook(excelFileInputStream);
-        } else if (excelType == 1) {
-            wb = new XSSFWorkbook(excelFileInputStream);
-        }
+        Workbook wb = initWorkBook(excelFileInputStream, excelType);
         if (wb == null) {
             throw new FileTypeException();
         } else {
@@ -87,7 +95,7 @@ public class ExcelInputHandler {
             if (isReadAllSheet) {
                 sheetLength = wb.getNumberOfSheets();
             }
-            List<String> rowNames = excel.getRowNames();
+            List<String> rowNames = excelModel.getCellNames();
             for (int sheetIndex = 0; sheetIndex < sheetLength; sheetIndex++) {
                 Sheet sheet = wb.getSheetAt(sheetIndex);
                 if (sheet != null) {
@@ -131,12 +139,7 @@ public class ExcelInputHandler {
      */
     public boolean judgeExcelHeaderStandard(InputStream excelFileInputStream, int excelType, String sheetName) throws
             IOException, FileTypeException, SheetException {
-        Workbook wb = null;
-        if (excelType == 0) {
-            wb = new HSSFWorkbook(excelFileInputStream);
-        } else if (excelType == 1) {
-            wb = new XSSFWorkbook(excelFileInputStream);
-        }
+        Workbook wb = initWorkBook(excelFileInputStream, excelType);
         if (wb == null) {
             throw new FileTypeException();
         } else {
@@ -144,7 +147,7 @@ public class ExcelInputHandler {
             if (sheet == null) {
                 throw new NullPointerException("文件内无该指定工作表");
             } else {
-                List<String> rowNames = excel.getRowNames();
+                List<String> rowNames = excelModel.getCellNames();
                 //获取当前第一行的数据
                 Row row = sheet.getRow(0);
                 int rowLength = row.getLastCellNum();
@@ -161,7 +164,6 @@ public class ExcelInputHandler {
                             return false;
                         }
                     }
-
                 }
             }
             return true;
@@ -187,7 +189,7 @@ public class ExcelInputHandler {
         //因为前面判定了所以这里不做任何判定
         Workbook wb = excelType == 0 ? new HSSFWorkbook(excelFileInputStream) : new XSSFWorkbook(excelFileInputStream);
         Sheet sheet = wb.getSheet(sheetName);
-        List<String> rowField = excel.getRowField();
+        List<String> rowField = excelModel.getCellFields();
         for (int rowIndex = 1; rowIndex < sheet.getLastRowNum(); rowIndex++) {
             Map<String, Object> value = new HashMap<>(rowField.size());
             Row row = sheet.getRow(rowIndex);
@@ -231,8 +233,7 @@ public class ExcelInputHandler {
                     //异常属性
                     case _NONE:
                     case ERROR:
-                        v = null;
-                        value.put(k, v);
+                        value.put(k, null);
                         break;
                 }
             }
@@ -242,67 +243,55 @@ public class ExcelInputHandler {
     }
 
     /**
-     *
      * @param excelFileInputStream
      * @param excelType
      * @param sheetName
      * @return
      */
-    public List<Object> readExcelData(InputStream excelFileInputStream, Integer excelType, String sheetName) {
-        return null;
+    public <T> List<Object> readExcelData(InputStream excelFileInputStream, Integer excelType, String sheetName) throws IOException,
+            IllegalAccessException, InstantiationException {
+        if (target == null) {
+            throw new TargetException();
+        }
+        boolean isStandard = judgeExcelHeaderStandard(excelFileInputStream, excelType, sheetName);
+        if (!isStandard) {
+            throw new FileStandardException();
+        }
+        List<Object> data = new ArrayList<>();
+        //因为前面判定了所以这里不做任何判定
+        Workbook wb = excelType == 0 ? new HSSFWorkbook(excelFileInputStream) : new XSSFWorkbook(excelFileInputStream);
+        Sheet sheet = wb.getSheet(sheetName);
+        List<String> rowField = excelModel.getCellFields();
+        List<SupportEnum> enums = excelModel.getFieldParam();
+        for (int rowIndex = 1; rowIndex < sheet.getLastRowNum(); rowIndex++) {
+            T clazz = (T) target.newInstance();
+            Row row = sheet.getRow(rowIndex);
+            for (int cellIndex = 0; cellIndex < row.getLastCellNum(); cellIndex++) {
+                //获取单元格信息,属性名称
+                Cell cell = row.getCell(cellIndex);
+                String field = rowField.get(cellIndex);
+
+            }
+        }
+        return data;
     }
 
-    class Excel {
-
-        /**
-         * 获取单元格长度
-         */
-        private Integer rowLength;
-
-        /**
-         * 首栏的名称
-         */
-        private List<String> rowNames;
-
-        /**
-         * 首栏名称对应的属性
-         */
-        private List<String> rowField;
-
-        Excel() {
-
-        }
-
-        Excel(Integer rowLength, List<String> rowNames, List<String> rowField) {
-            this.rowLength = rowLength;
-            this.rowNames = rowNames;
-            this.rowField = rowField;
-        }
-
-        public Integer getRowLength() {
-            return rowLength;
-        }
-
-        public void setRowLength(Integer rowLength) {
-            this.rowLength = rowLength;
-        }
-
-        public List<String> getRowNames() {
-            return rowNames;
-        }
-
-        public void setRowNames(List<String> rowNames) {
-            this.rowNames = rowNames;
-        }
-
-        public List<String> getRowField() {
-            return rowField;
-        }
-
-        public void setRowField(List<String> rowField) {
-            this.rowField = rowField;
-        }
-
+    /**
+     * 指定转换对象属性
+     *
+     * @param target 目标对象属性
+     */
+    public void setTarget(Class target) {
+        this.target = target;
+        excelModel = AnnotationsUtil.getExcelClassField(target);
     }
 
+    /**
+     * 获取目标转换对象
+     *
+     * @return target对象
+     */
+    public Class getTarget() {
+        return target;
+    }
 }

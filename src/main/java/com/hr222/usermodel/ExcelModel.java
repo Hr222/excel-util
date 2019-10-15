@@ -1,5 +1,7 @@
 package com.hr222.usermodel;
 
+import com.hr222.enumeration.SupportEnum;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,13 +38,19 @@ public class ExcelModel {
      */
     private Map<String, String> dateFormatFields;
 
+    /**
+     * 各个变量的属性
+     */
+    private List<SupportEnum> fieldParam;
+
     public ExcelModel(List<String> cellNames, List<String> cellFields, Set<String> allowNullFields,
-                      Map<String, String> booleanFields, Map<String, String> dateFormatFields) {
+                      Map<String, String> booleanFields, Map<String, String> dateFormatFields,List<SupportEnum> fieldParam) {
         this.cellNames = cellNames;
         this.cellFields = cellFields;
         this.allowNullFields = allowNullFields;
         this.booleanFields = booleanFields;
         this.dateFormatFields = dateFormatFields;
+        this.fieldParam = fieldParam;
     }
 
     public ExcelModel() {
@@ -88,4 +96,11 @@ public class ExcelModel {
         this.dateFormatFields = dateFormatFields;
     }
 
+    public List<SupportEnum> getFieldParam() {
+        return fieldParam;
+    }
+
+    public void setFieldParam(List<SupportEnum> fieldParam) {
+        this.fieldParam = fieldParam;
+    }
 }

@@ -7,7 +7,7 @@ package com.hr222.exception;
  **/
 public class FieldException extends RuntimeException {
 
-    private static final long serialVersionUID = -8764707562035185262L;
+    static final long serialVersionUID = -4026425835878442617L;
 
     public FieldException() {
         super("该使用该注解属性错误,请核对使用该注解属性");

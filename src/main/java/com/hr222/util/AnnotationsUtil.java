@@ -3,8 +3,9 @@ package com.hr222.util;
 import com.hr222.annutations.CellName;
 import com.hr222.annutations.FormatDate;
 import com.hr222.annutations.IsBoolean;
+import com.hr222.enumeration.SupportEnum;
 import com.hr222.exception.FieldException;
-import com.hr222.exception.LengthException;
+import com.hr222.exception.UnSupportException;
 import com.hr222.usermodel.ExcelModel;
 
 import java.lang.reflect.Field;
@@ -12,10 +13,10 @@ import java.util.*;
 
 /**
  * @author: hr222
- * @create: 2019-10-07 22:37
+ * @date: 2019-10-07 22:37
  * @description: POJO注解处理器
  **/
-public class AnnutationsUtil {
+public class AnnotationsUtil {
 
     /**
      * 获取EXCEL类中的注解属性
@@ -34,9 +35,14 @@ public class AnnutationsUtil {
         Map<String, String> booleanFields = new HashMap<>(3);
         //Date属性时所弄的格式化值
         Map<String, String> dateFormatFields = new HashMap<>(3);
-
+        //属性值
+        List<SupportEnum> ennums = new ArrayList<>();
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
+            SupportEnum supportEnum = SupportEnum.getSupportEnum(field.getType());
+            if (supportEnum == null) {
+                throw new UnSupportException();
+            }
             IsBoolean isBoolean = field.getAnnotation(IsBoolean.class);
             CellName cellName = field.getAnnotation(CellName.class);
             FormatDate formatDate = field.getAnnotation(FormatDate.class);
@@ -49,22 +55,24 @@ public class AnnutationsUtil {
             }
             //这两个需要判断两个属性,假如是不是该属性又使用了这个直接抛异常
             if (isBoolean != null) {
-                if (field.equals(Boolean.class)) {
+                if (supportEnum.equals(SupportEnum.BOOLEAN)) {
                     booleanFields.put(field.getName(), isBoolean.value());
                 } else {
                     throw new FieldException();
                 }
             }
             if (formatDate != null) {
-                if (field.equals(Date.class)) {
+                if (supportEnum.equals(SupportEnum.DATE)) {
                     dateFormatFields.put(field.getName(), isBoolean.value());
                 } else {
                     throw new FieldException();
                 }
             }
+            ennums.add(supportEnum);
         }
-        ExcelModel model = new ExcelModel(cellNames, cellFields, allowNull, booleanFields, dateFormatFields);
-        return model;
+        ExcelModel excelModel = new ExcelModel(cellNames, cellFields, allowNull, booleanFields, dateFormatFields, ennums);
+        return excelModel;
     }
+
 }
 

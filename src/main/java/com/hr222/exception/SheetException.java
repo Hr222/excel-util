@@ -7,7 +7,7 @@ package com.hr222.exception;
  **/
 public class SheetException extends RuntimeException {
 
-    private static final long serialVersionUID = -8764707562035185262L;
+    final long serialVersionUID = 835170565043098831L;
 
     public SheetException() {
         super("文件内无工作表数据");

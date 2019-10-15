@@ -7,7 +7,7 @@ package com.hr222.exception;
  **/
 public class FileTypeException extends RuntimeException {
 
-    private static final long serialVersionUID = -8764707562035185262L;
+    static final long serialVersionUID = 8214971599430440658L;
 
     public FileTypeException() {
         super("文件单元格式错误");

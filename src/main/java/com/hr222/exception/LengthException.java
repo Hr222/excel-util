@@ -7,7 +7,7 @@ package com.hr222.exception;
  **/
 public class LengthException extends RuntimeException {
 
-    private static final long serialVersionUID = -8764707562035185262L;
+    static final long serialVersionUID = 5785993916080147261L;
 
     public LengthException() {
         super("文件单元格式两者长度不等");

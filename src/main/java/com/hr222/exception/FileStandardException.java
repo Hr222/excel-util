@@ -7,7 +7,7 @@ package com.hr222.exception;
  **/
 public class FileStandardException extends RuntimeException {
 
-    private static final long serialVersionUID = -8764707562035185262L;
+    static final long serialVersionUID = 4497975428786798539L;
 
     public FileStandardException() {
         super("工作表头不合法");
